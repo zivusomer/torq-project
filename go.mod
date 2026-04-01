@@ -1,3 +1,3 @@
-module github.com/zivusomer/torq-project
+module zivusomer/torq-project
 
 go 1.22.0
