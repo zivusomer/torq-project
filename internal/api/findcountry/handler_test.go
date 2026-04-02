@@ -2,6 +2,7 @@ package findcountry
 
 import (
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 
 	"zivusomer/torq-project/internal/location"
 	"zivusomer/torq-project/internal/ratelimit"
+	"zivusomer/torq-project/internal/store"
 )
 
 type fakeStore struct {
@@ -94,6 +96,46 @@ func TestFindCountryBadRequestWhenIPMissing(t *testing.T) {
 
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusBadRequest)
+	}
+}
+
+func TestFindCountryMethodNotAllowed(t *testing.T) {
+	h := setupHandler(t, 10, fakeStore{})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/find-country?ip=2.22.233.255", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestFindCountryNotFound(t *testing.T) {
+	h := setupHandler(t, 10, fakeStore{
+		err: store.ErrIPNotFound,
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/find-country?ip=2.22.233.255", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusNotFound)
+	}
+}
+
+func TestFindCountryInternalError(t *testing.T) {
+	h := setupHandler(t, 10, fakeStore{
+		err: errors.New("store failed"),
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/find-country?ip=2.22.233.255", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusInternalServerError)
 	}
 }
 
