@@ -13,10 +13,13 @@ import (
 
 func main() {
 	cfg := initConfig()
-	application := initApplication(cfg)
 	ctx, stop := initSignalContext()
 	defer stop()
+	application := initApplication(cfg)
+	runApplication(application, ctx)
+}
 
+func runApplication(application *app.App, ctx context.Context) {
 	if err := application.Run(ctx); err != nil {
 		logging.Logger.Error("server stopped: " + err.Error())
 		os.Exit(1)
