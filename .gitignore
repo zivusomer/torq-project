@@ -1,6 +1,8 @@
 # Binaries and build output
 /bin/
 /dist/
+torq-project
+__debug_bin*
 *.exe
 *.exe~
 *.dll

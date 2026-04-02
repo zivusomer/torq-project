@@ -70,11 +70,32 @@ Environment variables override values from the selected environment preset.
 ```bash
 make build
 make run
+make debug
 make test
 make lint
 ```
 
 `make lint` runs formatting (`go fmt`), dependency cleanup (`go mod tidy`), static checks (`go vet`), and tests.
+
+`make debug` starts the app under Delve on `localhost:2345` (headless, ready for debugger attach and curl testing).
+
+`make debug` prerequisite:
+
+```bash
+go install github.com/go-delve/delve/cmd/dlv@latest
+```
+
+Debug flow:
+
+1. Run `make debug`.
+2. Attach debugger to `localhost:2345` from Cursor/VS Code Go debugger.
+   - Configure a local debug profile with:
+     - request: `attach`
+     - mode: `remote`
+     - host: `127.0.0.1`
+     - port: `2345`
+3. Set breakpoints and call:
+   - `curl "http://localhost:8080/v1/find-country?ip=2.22.233.255"`
 
 ## Git hooks
 
