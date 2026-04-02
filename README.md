@@ -76,6 +76,18 @@ make lint
 
 `make lint` runs formatting (`go fmt`), dependency cleanup (`go mod tidy`), static checks (`go vet`), and tests.
 
+## Git hooks
+
+Commits in this repo run lint via pre-commit. Tracked hook logic lives in:
+
+- `scripts/hooks/pre-commit`
+
+If you clone this repo to a new machine, run once:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
 ## Local example
 
 ```bash

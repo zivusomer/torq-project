@@ -18,15 +18,8 @@ var (
 	globalLimiter *Limiter
 )
 
-func New(limit int) (*Limiter, error) {
-	if limit < 1 {
-		return nil, fmt.Errorf("rate limit must be >= 1")
-	}
-	return &Limiter{limit: limit}, nil
-}
-
 func Init(limit int) error {
-	limiter, err := New(limit)
+	limiter, err := newLimiter(limit)
 	if err != nil {
 		return err
 	}
@@ -63,4 +56,11 @@ func (l *Limiter) Allow() bool {
 
 	l.requests++
 	return true
+}
+
+func newLimiter(limit int) (*Limiter, error) {
+	if limit < 1 {
+		return nil, fmt.Errorf("rate limit must be >= 1")
+	}
+	return &Limiter{limit: limit}, nil
 }

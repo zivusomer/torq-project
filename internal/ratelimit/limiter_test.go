@@ -1,26 +1,29 @@
-package ratelimit
+package ratelimit_test
 
-import "testing"
+import (
+	"testing"
+
+	"zivusomer/torq-project/internal/ratelimit"
+)
 
 func TestLimiterBlocksAfterLimit(t *testing.T) {
-	limiter, err := New(2)
-	if err != nil {
-		t.Fatalf("New() error: %v", err)
+	if err := ratelimit.Init(2); err != nil {
+		t.Fatalf("Init() error: %v", err)
 	}
 
-	if !limiter.Allow() {
+	if !ratelimit.Allow() {
 		t.Fatalf("first request should be allowed")
 	}
-	if !limiter.Allow() {
+	if !ratelimit.Allow() {
 		t.Fatalf("second request should be allowed")
 	}
-	if limiter.Allow() {
+	if ratelimit.Allow() {
 		t.Fatalf("third request should be blocked")
 	}
 }
 
 func TestLimiterRejectsInvalidLimit(t *testing.T) {
-	_, err := New(0)
+	err := ratelimit.Init(0)
 	if err == nil {
 		t.Fatalf("expected error for invalid limit")
 	}
