@@ -7,7 +7,7 @@ import (
 	"zivusomer/torq-project/internal/httpserver/httpx"
 )
 
-func RequestIPMiddleware(ctx *Context, next Next) {
+func ExtractIPFromHTTPParameter(ctx *Context, next Next) {
 	ipParam, err := httpx.RequiredQuery(ctx.R, "ip")
 	if err != nil {
 		WriteHTTPError(ctx, err)

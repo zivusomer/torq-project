@@ -23,12 +23,12 @@ func TestCallerIPIdentityMiddleware_FromForwardedFor(t *testing.T) {
 	}
 }
 
-func TestRequestIPMiddleware_Valid(t *testing.T) {
+func TestExtractIPFromHTTPParameter_Valid(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/find-country?ip=8.8.8.8", nil)
 	ctx := ContextWithDefaults(httptest.NewRecorder(), req)
 	called := false
 
-	RequestIPMiddleware(ctx, func(*Context) {
+	ExtractIPFromHTTPParameter(ctx, func(*Context) {
 		called = true
 	})
 
@@ -40,11 +40,11 @@ func TestRequestIPMiddleware_Valid(t *testing.T) {
 	}
 }
 
-func TestRequestIPMiddleware_MissingIP(t *testing.T) {
+func TestExtractIPFromHTTPParameter_MissingIP(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/find-country", nil)
 	ctx := ContextWithDefaults(httptest.NewRecorder(), req)
 
-	RequestIPMiddleware(ctx, func(*Context) {
+	ExtractIPFromHTTPParameter(ctx, func(*Context) {
 		t.Fatalf("next middleware should not be called")
 	})
 

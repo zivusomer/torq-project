@@ -8,7 +8,7 @@ import (
 	"zivusomer/torq-project/internal/store"
 )
 
-func (h *Handler) executeRequestMiddleware(ctx *common.Context, next common.Next) {
+func (h *Handler) FindCountryMiddleware(ctx *common.Context, next common.Next) {
 	record, err := h.store.FindByIP(ctx.RequestedIP)
 	if err != nil {
 		if errors.Is(err, store.ErrIPNotFound) {

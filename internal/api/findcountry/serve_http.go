@@ -12,9 +12,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		common.MiddlewareFunc(common.WriteResponseMiddleware),
 		common.MiddlewareFunc(common.CallerIPIdentityMiddleware),
 		common.MiddlewareFunc(common.RateLimitMiddleware),
-		common.MiddlewareFunc(common.RequestIPMiddleware),
+		common.MiddlewareFunc(common.ExtractIPFromHTTPParameter),
 		common.MiddlewareFunc(methodGuardMiddleware),
-		common.MiddlewareFunc(h.executeRequestMiddleware),
+		common.MiddlewareFunc(h.FindCountryMiddleware),
 	)
 	chain(ctx)
 }
