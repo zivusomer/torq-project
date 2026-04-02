@@ -6,7 +6,6 @@ var presets = map[string]Config{
 	"development": {
 		AppName:           "torq-project-dev",
 		Env:               "development",
-		LogLevel:          "debug",
 		Port:              "8080",
 		DatastoreType:     "csv",
 		DatastorePath:     "data/ip_locations.csv",
@@ -15,7 +14,6 @@ var presets = map[string]Config{
 	"production": {
 		AppName:           "torq-project",
 		Env:               "production",
-		LogLevel:          "info",
 		Port:              "8080",
 		DatastoreType:     "csv",
 		DatastorePath:     "data/ip_locations.csv",

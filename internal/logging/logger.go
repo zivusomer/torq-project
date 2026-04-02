@@ -3,24 +3,36 @@ package logging
 import (
 	"log/slog"
 	"os"
-	"strings"
+	"sync"
 )
 
-func New(level string) *slog.Logger {
-	var slogLevel slog.Level
-	switch strings.ToLower(level) {
-	case "debug":
-		slogLevel = slog.LevelDebug
-	case "warn", "warning":
-		slogLevel = slog.LevelWarn
-	case "error":
-		slogLevel = slog.LevelError
-	default:
-		slogLevel = slog.LevelInfo
+var (
+	Logger = &Service{
+		logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})),
 	}
+)
 
-	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slogLevel,
-	})
-	return slog.New(handler)
+type Service struct {
+	mu     sync.RWMutex
+	logger *slog.Logger
+}
+
+func (s *Service) Info(message string) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	s.logger.Info(message)
+}
+
+func (s *Service) Warn(message string) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	s.logger.Warn(message)
+}
+
+func (s *Service) Error(message string) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	s.logger.Error(message)
 }

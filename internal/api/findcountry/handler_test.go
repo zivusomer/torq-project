@@ -23,9 +23,15 @@ func (f fakeStore) FindByIP(_ net.IP) (location.Record, error) {
 }
 
 func TestFindCountrySuccess(t *testing.T) {
-	h := NewHandler(fakeStore{
+	if err := ratelimit.Init(10); err != nil {
+		t.Fatalf("ratelimit.Init() error: %v", err)
+	}
+	h, err := NewHandler(fakeStore{
 		record: location.Record{Country: "US", City: "New York"},
-	}, ratelimit.New(10))
+	})
+	if err != nil {
+		t.Fatalf("NewHandler() error: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/find-country?ip=2.22.233.255", nil)
 	rr := httptest.NewRecorder()
@@ -37,9 +43,15 @@ func TestFindCountrySuccess(t *testing.T) {
 }
 
 func TestFindCountryRateLimited(t *testing.T) {
-	h := NewHandler(fakeStore{
+	if err := ratelimit.Init(1); err != nil {
+		t.Fatalf("ratelimit.Init() error: %v", err)
+	}
+	h, err := NewHandler(fakeStore{
 		record: location.Record{Country: "US", City: "New York"},
-	}, ratelimit.New(1))
+	})
+	if err != nil {
+		t.Fatalf("NewHandler() error: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/find-country?ip=2.22.233.255", nil)
 	rr1 := httptest.NewRecorder()
@@ -53,7 +65,13 @@ func TestFindCountryRateLimited(t *testing.T) {
 }
 
 func TestFindCountryBadRequestWhenIPMissing(t *testing.T) {
-	h := NewHandler(fakeStore{}, ratelimit.New(10))
+	if err := ratelimit.Init(10); err != nil {
+		t.Fatalf("ratelimit.Init() error: %v", err)
+	}
+	h, err := NewHandler(fakeStore{})
+	if err != nil {
+		t.Fatalf("NewHandler() error: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/find-country", nil)
 	rr := httptest.NewRecorder()
@@ -61,5 +79,12 @@ func TestFindCountryBadRequestWhenIPMissing(t *testing.T) {
 
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusBadRequest)
+	}
+}
+
+func TestFindCountryHandlerRejectsNilDeps(t *testing.T) {
+	_, err := NewHandler(nil)
+	if err == nil {
+		t.Fatalf("expected error for nil dependencies")
 	}
 }

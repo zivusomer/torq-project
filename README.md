@@ -16,10 +16,10 @@ IP-to-country service in Go with a pluggable datastore and built-in rate limitin
 
 1. `cmd/torq-project/main.go` calls `config.LoadFromEnv()`.
 2. `internal/config` selects preset by `APP_ENV` and applies env var overrides.
-3. `internal/logging` builds logger from `LOG_LEVEL`.
+3. `internal/logging` initializes the global logger service.
 4. `internal/store/factory` selects datastore implementation (currently `csv`).
 5. `internal/store/csvstore` loads CSV rows into an in-memory map.
-6. `internal/ratelimit` creates the per-second limiter.
+6. `internal/ratelimit` initializes the global per-second limiter service.
 7. `internal/api/findcountry` creates endpoint handler and `internal/httpserver` registers routes.
 8. `http.ListenAndServe` starts serving on configured `PORT`.
 
@@ -42,9 +42,9 @@ IP-to-country service in Go with a pluggable datastore and built-in rate limitin
 ```text
 Startup:
 main -> config.LoadFromEnv -> presetForEnv/env overrides
-main -> logging.New
+main -> logging.Logger.Info/Warn/Error
 main -> store/factory.New -> csvstore.New(load CSV)
-main -> ratelimit.New
+main -> ratelimit.Init
 main -> findcountry.NewHandler -> httpserver.New -> Handler() -> ListenAndServe
 
 Request:
@@ -58,7 +58,6 @@ handler -> JSON success/error response
 
 - `APP_ENV` (default: `development`) selects a strongly typed Go preset (supported: `development`, `production`)
 - `APP_NAME` (default: `torq-project`)
-- `LOG_LEVEL` (default: `info`)
 - `PORT` (default: `8080`)
 - `DATASTORE_TYPE` (default: `csv`)
 - `DATASTORE_PATH` (default: `data/ip_locations.csv`)

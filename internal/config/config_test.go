@@ -5,7 +5,6 @@ import "testing"
 func TestLoadFromEnv_Defaults(t *testing.T) {
 	t.Setenv("APP_ENV", "development")
 	t.Setenv("APP_NAME", "")
-	t.Setenv("LOG_LEVEL", "")
 	t.Setenv("PORT", "")
 	t.Setenv("DATASTORE_TYPE", "")
 	t.Setenv("DATASTORE_PATH", "")
@@ -21,9 +20,6 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	}
 	if cfg.Env != "development" {
 		t.Fatalf("expected default env, got %q", cfg.Env)
-	}
-	if cfg.LogLevel == "" {
-		t.Fatalf("expected non-empty log level")
 	}
 	if cfg.Port == "" {
 		t.Fatalf("expected non-empty port")
@@ -42,7 +38,6 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 func TestLoadFromEnv_Overrides(t *testing.T) {
 	t.Setenv("APP_ENV", "production")
 	t.Setenv("APP_NAME", "my-app")
-	t.Setenv("LOG_LEVEL", "debug")
 	t.Setenv("PORT", "9000")
 	t.Setenv("DATASTORE_TYPE", "csv")
 	t.Setenv("DATASTORE_PATH", "fixtures/ip.csv")
@@ -58,9 +53,6 @@ func TestLoadFromEnv_Overrides(t *testing.T) {
 	}
 	if cfg.Env != "production" {
 		t.Fatalf("expected APP_ENV override, got %q", cfg.Env)
-	}
-	if cfg.LogLevel != "debug" {
-		t.Fatalf("expected LOG_LEVEL override, got %q", cfg.LogLevel)
 	}
 	if cfg.Port != "9000" {
 		t.Fatalf("expected PORT override, got %q", cfg.Port)
@@ -79,7 +71,6 @@ func TestLoadFromEnv_Overrides(t *testing.T) {
 func TestLoadFromEnv_UsesProductionPresetValues(t *testing.T) {
 	t.Setenv("APP_ENV", "production")
 	t.Setenv("APP_NAME", "")
-	t.Setenv("LOG_LEVEL", "")
 	t.Setenv("PORT", "")
 	t.Setenv("DATASTORE_TYPE", "")
 	t.Setenv("DATASTORE_PATH", "")
@@ -92,9 +83,6 @@ func TestLoadFromEnv_UsesProductionPresetValues(t *testing.T) {
 
 	if cfg.AppName == "" {
 		t.Fatalf("expected non-empty app name")
-	}
-	if cfg.LogLevel == "" {
-		t.Fatalf("expected non-empty log level")
 	}
 	if cfg.Port == "" {
 		t.Fatalf("expected non-empty port")

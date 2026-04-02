@@ -2,6 +2,7 @@ package findcountry
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 
@@ -11,15 +12,17 @@ import (
 )
 
 type Handler struct {
-	store   store.Resolver
-	limiter *ratelimit.Limiter
+	store store.Resolver
 }
 
-func NewHandler(store store.Resolver, limiter *ratelimit.Limiter) *Handler {
-	return &Handler{
-		store:   store,
-		limiter: limiter,
+func NewHandler(store store.Resolver) (*Handler, error) {
+	if store == nil {
+		return nil, fmt.Errorf("store is required")
 	}
+
+	return &Handler{
+		store: store,
+	}, nil
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +31,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.limiter.Allow() {
+	if !ratelimit.Allow() {
 		httpx.WriteJSONError(w, http.StatusTooManyRequests, "rate limit exceeded")
 		return
 	}

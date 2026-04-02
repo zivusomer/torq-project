@@ -8,7 +8,6 @@ import (
 type Config struct {
 	AppName           string
 	Env               string
-	LogLevel          string
 	Port              string
 	DatastoreType     string
 	DatastorePath     string
@@ -25,7 +24,6 @@ func LoadFromEnv() (Config, error) {
 	// Environment variables have highest precedence over environment presets.
 	cfg.AppName = getEnv("APP_NAME", cfg.AppName)
 	cfg.Env = env
-	cfg.LogLevel = getEnv("LOG_LEVEL", cfg.LogLevel)
 	cfg.Port = getEnv("PORT", cfg.Port)
 	cfg.DatastoreType = getEnv("DATASTORE_TYPE", cfg.DatastoreType)
 	cfg.DatastorePath = getEnv("DATASTORE_PATH", cfg.DatastorePath)
