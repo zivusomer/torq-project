@@ -71,6 +71,18 @@ func TestFindCountryRateLimited(t *testing.T) {
 	if rr2.Code != http.StatusTooManyRequests {
 		t.Fatalf("status = %d, want %d", rr2.Code, http.StatusTooManyRequests)
 	}
+	if rr2.Header().Get("Retry-After") == "" {
+		t.Fatalf("expected Retry-After header when rate limited")
+	}
+	if rr2.Header().Get("RateLimit-Limit") == "" {
+		t.Fatalf("expected RateLimit-Limit header")
+	}
+	if rr2.Header().Get("RateLimit-Remaining") == "" {
+		t.Fatalf("expected RateLimit-Remaining header")
+	}
+	if rr2.Header().Get("RateLimit-Reset") == "" {
+		t.Fatalf("expected RateLimit-Reset header")
+	}
 }
 
 func TestFindCountryBadRequestWhenIPMissing(t *testing.T) {

@@ -2,15 +2,30 @@ package ratelimit
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 )
 
+type Decision struct {
+	Allowed           bool
+	Limit             int
+	Remaining         int
+	ResetSeconds      int
+	RetryAfterSeconds int
+}
+
 type Limiter struct {
-	mu       sync.Mutex
-	limit    int
-	window   int64
-	requests int
+	mu         sync.Mutex
+	limit      int
+	capacity   float64
+	refillRate float64
+	buckets    map[string]*bucketState
+}
+
+type bucketState struct {
+	tokens     float64
+	lastRefill time.Time
 }
 
 var (
@@ -37,30 +52,79 @@ func Allow() bool {
 	if limiter == nil {
 		return false
 	}
-	return limiter.Allow()
+	return limiter.allow("global").Allowed
 }
 
-func (l *Limiter) Allow() bool {
+func AllowForKey(key string) Decision {
+	globalMu.RLock()
+	limiter := globalLimiter
+	globalMu.RUnlock()
+	if limiter == nil {
+		return Decision{Allowed: false}
+	}
+	return limiter.allow(key)
+}
+
+func (l *Limiter) allow(key string) Decision {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	now := time.Now().Unix()
-	if now != l.window {
-		l.window = now
-		l.requests = 0
+	if key == "" {
+		key = "anonymous"
 	}
 
-	if l.requests >= l.limit {
-		return false
+	now := time.Now()
+	bucket, ok := l.buckets[key]
+	if !ok {
+		bucket = &bucketState{
+			tokens:     l.capacity,
+			lastRefill: now,
+		}
+		l.buckets[key] = bucket
 	}
 
-	l.requests++
-	return true
+	elapsed := now.Sub(bucket.lastRefill).Seconds()
+	if elapsed > 0 {
+		bucket.tokens = math.Min(l.capacity, bucket.tokens+(elapsed*l.refillRate))
+		bucket.lastRefill = now
+	}
+
+	decision := Decision{
+		Allowed:      false,
+		Limit:        l.limit,
+		Remaining:    int(math.Floor(math.Max(bucket.tokens-1, 0))),
+		ResetSeconds: int(math.Ceil((l.capacity - bucket.tokens) / l.refillRate)),
+	}
+	if decision.ResetSeconds < 0 {
+		decision.ResetSeconds = 0
+	}
+
+	if bucket.tokens >= 1 {
+		bucket.tokens--
+		decision.Allowed = true
+		decision.Remaining = int(math.Floor(bucket.tokens))
+		return decision
+	}
+
+	retryAfter := int(math.Ceil((1 - bucket.tokens) / l.refillRate))
+	if retryAfter < 1 {
+		retryAfter = 1
+	}
+	decision.RetryAfterSeconds = retryAfter
+	if decision.ResetSeconds < retryAfter {
+		decision.ResetSeconds = retryAfter
+	}
+	return decision
 }
 
 func newLimiter(limit int) (*Limiter, error) {
 	if limit < 1 {
 		return nil, fmt.Errorf("rate limit must be >= 1")
 	}
-	return &Limiter{limit: limit}, nil
+	return &Limiter{
+		limit:      limit,
+		capacity:   float64(limit),
+		refillRate: float64(limit),
+		buckets:    make(map[string]*bucketState),
+	}, nil
 }
