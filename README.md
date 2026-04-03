@@ -45,6 +45,57 @@ For pre-commit lint execution:
    - rate limited -> `429`
    - unexpected internal error -> `500`
 
+## Design notes
+
+### Identity and rate limiting (IP-based)
+
+- This API does not require user authentication tokens.
+- Caller identity is derived from network metadata (`X-Forwarded-For`, then `X-Real-IP`, then `RemoteAddr`).
+- Rate limiting is applied per caller identity key (currently the resolved caller IP).
+- On limit exceed, the API returns `429` and includes standard throttling headers such as `Retry-After` and `RateLimit-*`.
+- This design keeps the API simple while still protecting backend resources from abuse.
+
+### Backend rate-limit implementations
+
+- Two interchangeable backends are supported behind one facade:
+  - in-memory token bucket (single-process/local)
+  - Redis token bucket (distributed/multi-instance)
+- Redis backend uses an atomic Lua script to avoid race conditions under concurrent requests.
+- Switching backends is configuration-driven (`RATE_LIMIT_BACKEND`) without changing handler code.
+
+### Datastore design (CSV now, pluggable later)
+
+- Current datastore is CSV (`data/ip_locations.csv`) for easy local testing.
+- Business logic reads through the store abstraction (`store.Resolver`), not directly from CSV parsing code.
+- The active datastore is selected by configuration (`DATASTORE_TYPE`), so adding a new backend (DB/service/file format) is straightforward and does not require API contract changes.
+
+### Logging behavior
+
+- Logging is centralized via the internal logging package and exposed through simple calls (`Info`, `Warn`, `Error`).
+- Logs are used for startup lifecycle, configuration/bootstrap failures, and runtime issues (including middleware/runtime guardrails).
+- The current behavior is intentionally verbose enough for local debugging and external validation.
+
+### Architecture at a glance
+
+```text
+Client
+  -> HTTP route: /v1/find-country
+  -> API middleware pipeline
+      1) caller identity extraction (IP from headers/remote address)
+      2) rate limit check (in-memory or Redis backend)
+      3) request input validation (query param ip)
+      4) find-country execution via store.Resolver
+      5) unified JSON response writer
+  -> Response: 200/400/404/429/500 with JSON body
+
+Startup path:
+config.LoadFromEnv (preset + env overrides)
+  -> app bootstrap
+  -> datastore factory (CSV implementation today)
+  -> ratelimit backend init (inmemory/redis)
+  -> HTTP server start
+```
+
 ## Environment variables
 
 - `APP_ENV` (default: `development`) selects a strongly typed Go preset (supported: `development`, `production`)
