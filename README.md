@@ -123,6 +123,11 @@ make lint # runs format (`go fmt`), dependency cleanup (`go mod tidy`), static c
 ensure-redis # Uses local Redis container or creates one with `redis:7-alpine` on `localhost:6379`
 ```
 
+`make run` and `make debug` also auto-clean stale listeners before start:
+
+- `make run` frees port `8080` if needed.
+- `make debug` frees ports `8080` and `2345` if needed.
+
 ## Debug flow:
 
 1. Run `make debug`.
