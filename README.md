@@ -2,6 +2,27 @@
 
 IP-to-country service in Go with a pluggable datastore and built-in rate limiting.
 
+## Prerequisites
+
+Set these up before running project commands:
+
+- Go (recommended: 1.22+)
+- Make
+- Docker (required by `make run` / `make debug` because they ensure local Redis via container)
+- curl (for local API checks)
+
+For debugging:
+
+```bash
+go install github.com/go-delve/delve/cmd/dlv@latest
+```
+
+For pre-commit lint execution:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
 ## Endpoint
 
 - `GET /v1/find-country?ip=2.22.233.255`
@@ -84,18 +105,11 @@ make lint
 
 `make run` and `make debug` automatically run `ensure-redis` first:
 
-- Requires Docker to be installed.
 - Ensures a local Redis container named `torq-redis` exists and is running.
 - If missing, it creates one with `redis:7-alpine` on `localhost:6379`.
 - If it exists but is stopped, it starts it.
 
 `make debug` starts the app under Delve on `localhost:2345` (headless, ready for debugger attach and curl testing).
-
-`make debug` prerequisite:
-
-```bash
-go install github.com/go-delve/delve/cmd/dlv@latest
-```
 
 Debug flow:
 
@@ -114,12 +128,6 @@ Debug flow:
 Commits in this repo run lint via pre-commit. Tracked hook logic lives in:
 
 - `scripts/hooks/pre-commit`
-
-If you clone this repo to a new machine, run once:
-
-```bash
-./scripts/install-git-hooks.sh
-```
 
 ## Local example
 
@@ -163,7 +171,9 @@ make build
 2. Run or Debug service on host (also ensures local Redis container is ready):
 
 ```bash
-make run (or make debug)
+make run
+# or
+make debug
 ```
 
 3. Call the API:
