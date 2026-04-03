@@ -54,8 +54,8 @@ func TestExtractIPFromHTTPParameter_MissingIP(t *testing.T) {
 }
 
 func TestRateLimitMiddleware_RateLimitedIncludesHeaders(t *testing.T) {
-	if err := ratelimit.Init(1); err != nil {
-		t.Fatalf("ratelimit.Init() error: %v", err)
+	if err := ratelimit.InitLocal(1); err != nil {
+		t.Fatalf("ratelimit.InitLocal() error: %v", err)
 	}
 
 	allowReq := httptest.NewRequest(http.MethodGet, "/v1/find-country?ip=8.8.8.8", nil)

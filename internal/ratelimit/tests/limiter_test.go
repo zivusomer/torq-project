@@ -7,8 +7,8 @@ import (
 )
 
 func TestLimiterBlocksAfterLimit(t *testing.T) {
-	if err := ratelimit.Init(2); err != nil {
-		t.Fatalf("Init() error: %v", err)
+	if err := ratelimit.InitLocal(2); err != nil {
+		t.Fatalf("InitLocal() error: %v", err)
 	}
 
 	if !ratelimit.AllowForKey("user-1").Allowed {
@@ -27,15 +27,15 @@ func TestLimiterBlocksAfterLimit(t *testing.T) {
 }
 
 func TestLimiterRejectsInvalidLimit(t *testing.T) {
-	err := ratelimit.Init(0)
+	err := ratelimit.InitLocal(0)
 	if err == nil {
 		t.Fatalf("expected error for invalid limit")
 	}
 }
 
 func TestLimiterIsolatedByKey(t *testing.T) {
-	if err := ratelimit.Init(1); err != nil {
-		t.Fatalf("Init() error: %v", err)
+	if err := ratelimit.InitLocal(1); err != nil {
+		t.Fatalf("InitLocal() error: %v", err)
 	}
 
 	if !ratelimit.AllowForKey("user-a").Allowed {

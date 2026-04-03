@@ -12,6 +12,11 @@ type Config struct {
 	DatastoreType     string
 	DatastorePath     string
 	RequestsPerSecond int
+	RateLimitBackend  string
+	RedisAddr         string
+	RedisPassword     string
+	RedisDB           int
+	RedisKeyPrefix    string
 }
 
 func LoadFromEnv() (Config, error) {
@@ -28,6 +33,11 @@ func LoadFromEnv() (Config, error) {
 	cfg.DatastoreType = getEnv("DATASTORE_TYPE", cfg.DatastoreType)
 	cfg.DatastorePath = getEnv("DATASTORE_PATH", cfg.DatastorePath)
 	cfg.RequestsPerSecond = getEnvInt("REQUESTS_PER_SECOND", cfg.RequestsPerSecond)
+	cfg.RateLimitBackend = getEnv("RATE_LIMIT_BACKEND", cfg.RateLimitBackend)
+	cfg.RedisAddr = getEnv("REDIS_ADDR", cfg.RedisAddr)
+	cfg.RedisPassword = getEnv("REDIS_PASSWORD", cfg.RedisPassword)
+	cfg.RedisDB = getEnvInt("REDIS_DB", cfg.RedisDB)
+	cfg.RedisKeyPrefix = getEnv("REDIS_KEY_PREFIX", cfg.RedisKeyPrefix)
 
 	return cfg, nil
 }

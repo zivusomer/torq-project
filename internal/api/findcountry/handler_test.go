@@ -149,8 +149,8 @@ func TestFindCountryHandlerRejectsNilDeps(t *testing.T) {
 func setupHandler(t *testing.T, rateLimit int, store fakeStore) *Handler {
 	t.Helper()
 
-	if err := ratelimit.Init(rateLimit); err != nil {
-		t.Fatalf("ratelimit.Init() error: %v", err)
+	if err := ratelimit.InitLocal(rateLimit); err != nil {
+		t.Fatalf("ratelimit.InitLocal() error: %v", err)
 	}
 
 	h, err := NewHandler(store)

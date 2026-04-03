@@ -1,4 +1,4 @@
-package ratelimit
+package types
 
 type Decision struct {
 	Allowed           bool

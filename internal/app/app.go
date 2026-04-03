@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"zivusomer/torq-project/internal/api/findcountry"
@@ -26,7 +27,7 @@ func New(cfg config.Config) (*App, error) {
 		return nil, fmt.Errorf("initialize datastore: %w", err)
 	}
 
-	if err := ratelimit.Init(cfg.RequestsPerSecond); err != nil {
+	if err := initRateLimiter(cfg); err != nil {
 		return nil, fmt.Errorf("initialize rate limiter: %w", err)
 	}
 
@@ -76,4 +77,20 @@ func (a *App) Run(ctx context.Context) error {
 	}
 
 	return <-errCh
+}
+
+func initRateLimiter(cfg config.Config) error {
+	switch strings.ToLower(cfg.RateLimitBackend) {
+	case "", "inmemory":
+		return ratelimit.InitLocal(cfg.RequestsPerSecond)
+	case "redis":
+		return ratelimit.InitRedis(cfg.RequestsPerSecond, ratelimit.RedisConfig{
+			Addr:     cfg.RedisAddr,
+			Password: cfg.RedisPassword,
+			DB:       cfg.RedisDB,
+			Prefix:   cfg.RedisKeyPrefix,
+		})
+	default:
+		return fmt.Errorf("unsupported rate limit backend: %s", cfg.RateLimitBackend)
+	}
 }

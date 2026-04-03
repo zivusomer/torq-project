@@ -19,7 +19,7 @@ IP-to-country service in Go with a pluggable datastore and built-in rate limitin
 3. `internal/logging` initializes the global logger service.
 4. `internal/store/factory` selects datastore implementation (currently `csv`).
 5. `internal/store/csvstore` loads CSV rows into an in-memory map.
-6. `internal/ratelimit` initializes the global per-second limiter service.
+6. `internal/ratelimit` initializes the configured limiter backend (`inmemory` or `redis`).
 7. `internal/api/findcountry` creates endpoint handler and `internal/httpserver` registers routes.
 8. `http.ListenAndServe` starts serving on configured `PORT`.
 
@@ -62,6 +62,11 @@ handler -> JSON success/error response
 - `DATASTORE_TYPE` (default: `csv`)
 - `DATASTORE_PATH` (default: `data/ip_locations.csv`)
 - `REQUESTS_PER_SECOND` (default: `10`)
+- `RATE_LIMIT_BACKEND` (default: `inmemory`, supported: `inmemory`, `redis`)
+- `REDIS_ADDR` (default: `localhost:6379`, used when backend is `redis`)
+- `REDIS_PASSWORD` (default: empty, used when backend is `redis`)
+- `REDIS_DB` (default: `0`, used when backend is `redis`)
+- `REDIS_KEY_PREFIX` (default: `torq:ratelimit`, used when backend is `redis`)
 
 Environment variables override values from the selected environment preset.
 
