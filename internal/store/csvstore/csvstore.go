@@ -4,9 +4,11 @@ import (
 	"encoding/csv"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	"zivusomer/torq-project/internal/location"
+	"zivusomer/torq-project/internal/logging"
 	"zivusomer/torq-project/internal/store"
 )
 
@@ -37,6 +39,7 @@ func New(path string) (*Store, error) {
 		city := strings.TrimSpace(row[1])
 		country := strings.TrimSpace(row[2])
 		if ip == "" || city == "" || country == "" {
+			logging.Logger.Info("skipping csv row " + strconv.Itoa(i) + ": illegal format (empty field)")
 			continue
 		}
 		if i == 0 && strings.EqualFold(ip, "ip") && strings.EqualFold(city, "city") && strings.EqualFold(country, "country") {

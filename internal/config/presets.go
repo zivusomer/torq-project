@@ -9,7 +9,7 @@ var presets = map[string]Config{
 		Port:              "8080",
 		DatastoreType:     "csv",
 		DatastorePath:     "data/ip_locations.csv",
-		RequestsPerSecond: 20,
+		RequestsPerSecond: 2,
 	},
 	"production": {
 		AppName:           "torq-project",
@@ -17,7 +17,7 @@ var presets = map[string]Config{
 		Port:              "8080",
 		DatastoreType:     "csv",
 		DatastorePath:     "data/ip_locations.csv",
-		RequestsPerSecond: 30,
+		RequestsPerSecond: 3,
 	},
 }
 

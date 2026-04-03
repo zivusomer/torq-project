@@ -7,27 +7,6 @@ import (
 	"time"
 )
 
-type Decision struct {
-	Allowed           bool
-	Limit             int
-	Remaining         int
-	ResetSeconds      int
-	RetryAfterSeconds int
-}
-
-type Limiter struct {
-	mu         sync.Mutex
-	limit      int
-	capacity   float64
-	refillRate float64
-	buckets    map[string]*bucketState
-}
-
-type bucketState struct {
-	tokens     float64
-	lastRefill time.Time
-}
-
 var (
 	globalMu      sync.RWMutex
 	globalLimiter *Limiter
@@ -74,47 +53,16 @@ func (l *Limiter) allow(key string) Decision {
 	}
 
 	now := time.Now()
-	bucket, ok := l.buckets[key]
-	if !ok {
-		bucket = &bucketState{
-			tokens:     l.capacity,
-			lastRefill: now,
-		}
-		l.buckets[key] = bucket
-	}
-
-	elapsed := now.Sub(bucket.lastRefill).Seconds()
-	if elapsed > 0 {
-		bucket.tokens = math.Min(l.capacity, bucket.tokens+(elapsed*l.refillRate))
-		bucket.lastRefill = now
-	}
-
-	decision := Decision{
-		Allowed:      false,
-		Limit:        l.limit,
-		Remaining:    int(math.Floor(math.Max(bucket.tokens-1, 0))),
-		ResetSeconds: int(math.Ceil((l.capacity - bucket.tokens) / l.refillRate)),
-	}
-	if decision.ResetSeconds < 0 {
-		decision.ResetSeconds = 0
-	}
+	bucket := l.getOrCreateBucketForKey(key, now)
+	l.refillBucketTokens(bucket, now)
 
 	if bucket.tokens >= 1 {
-		bucket.tokens--
-		decision.Allowed = true
-		decision.Remaining = int(math.Floor(bucket.tokens))
-		return decision
+		remaining := l.consumeToken(bucket)
+		return l.allowedDecision(remaining)
 	}
 
-	retryAfter := int(math.Ceil((1 - bucket.tokens) / l.refillRate))
-	if retryAfter < 1 {
-		retryAfter = 1
-	}
-	decision.RetryAfterSeconds = retryAfter
-	if decision.ResetSeconds < retryAfter {
-		decision.ResetSeconds = retryAfter
-	}
-	return decision
+	retryAfter := l.retryAfterSeconds(bucket.tokens)
+	return l.deniedDecision(bucket.tokens, retryAfter)
 }
 
 func newLimiter(limit int) (*Limiter, error) {
@@ -127,4 +75,79 @@ func newLimiter(limit int) (*Limiter, error) {
 		refillRate: float64(limit),
 		buckets:    make(map[string]*bucketState),
 	}, nil
+}
+
+func (l *Limiter) consumeToken(bucket *bucketState) int {
+	bucket.tokens--
+	return int(math.Floor(bucket.tokens))
+}
+
+func (l *Limiter) getOrCreateBucketForKey(key string, now time.Time) *bucketState {
+	bucket, ok := l.buckets[key]
+	if ok {
+		return bucket
+	}
+	return l.createBucketForKey(key, now)
+}
+
+func (l *Limiter) refillBucketTokens(bucket *bucketState, now time.Time) {
+	elapsed := l.elapsedSeconds(now, bucket.lastRefill)
+	if elapsed > 0 {
+		bucket.tokens = math.Min(l.capacity, bucket.tokens+(elapsed*l.refillRate))
+		bucket.lastRefill = now
+	}
+}
+
+func (l *Limiter) elapsedSeconds(now time.Time, lastRefill time.Time) float64 {
+	return now.Sub(lastRefill).Seconds()
+}
+
+func (l *Limiter) createBucketForKey(key string, now time.Time) *bucketState {
+	bucket := &bucketState{
+		tokens:     l.capacity,
+		lastRefill: now,
+	}
+	l.buckets[key] = bucket
+	return bucket
+}
+
+func (l *Limiter) retryAfterSeconds(tokens float64) int {
+	retryAfter := int(math.Ceil((1 - tokens) / l.refillRate))
+	if retryAfter < 1 {
+		return 1
+	}
+	return retryAfter
+}
+
+func (l *Limiter) resetSeconds(tokens float64) int {
+	reset := int(math.Ceil((l.capacity - tokens) / l.refillRate))
+	if reset < 0 {
+		return 0
+	}
+	return reset
+}
+
+func (l *Limiter) allowedDecision(remaining int) Decision {
+	return Decision{
+		Allowed:      true,
+		Limit:        l.limit,
+		Remaining:    remaining,
+		ResetSeconds: 0,
+	}
+}
+
+func (l *Limiter) deniedDecision(tokens float64, retryAfter int) Decision {
+	remaining := int(math.Floor(math.Max(tokens-1, 0)))
+	reset := l.resetSeconds(tokens)
+	if reset < retryAfter {
+		reset = retryAfter
+	}
+
+	return Decision{
+		Allowed:           false,
+		Limit:             l.limit,
+		Remaining:         remaining,
+		ResetSeconds:      reset,
+		RetryAfterSeconds: retryAfter,
+	}
 }
