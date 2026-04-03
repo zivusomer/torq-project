@@ -139,3 +139,41 @@ Optional image naming:
 ```bash
 IMAGE_NAME=my-org/ip2country IMAGE_TAG=v1 ./scripts/build-docker.sh
 ```
+
+Optional build controls:
+
+```bash
+NO_CACHE=true ./scripts/build-docker.sh
+DOCKERFILE_PATH=Dockerfile BUILD_CONTEXT=. ./scripts/build-docker.sh
+```
+
+Note: `./scripts/build-docker.sh` only builds a Docker image. It does not run the service.
+For local execution, use `make run` (or `make debug`), which runs the app on your host and auto-ensures local Redis is available.
+
+## Step-by-step local run
+
+If you want to run everything in the common local flow, use:
+
+1. Build Docker image (optional artifact build):
+
+```bash
+./scripts/build-docker.sh
+```
+
+2. Build Go service binary on host:
+
+```bash
+make build
+```
+
+3. Run service on host (also ensures local Redis container is ready):
+
+```bash
+make run
+```
+
+4. Call the API:
+
+```bash
+curl "http://localhost:8080/v1/find-country?ip=2.22.233.255"
+```
