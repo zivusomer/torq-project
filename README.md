@@ -82,6 +82,13 @@ make lint
 
 `make lint` runs formatting (`go fmt`), dependency cleanup (`go mod tidy`), static checks (`go vet`), and tests.
 
+`make run` and `make debug` automatically run `ensure-redis` first:
+
+- Requires Docker to be installed.
+- Ensures a local Redis container named `torq-redis` exists and is running.
+- If missing, it creates one with `redis:7-alpine` on `localhost:6379`.
+- If it exists but is stopped, it starts it.
+
 `make debug` starts the app under Delve on `localhost:2345` (headless, ready for debugger attach and curl testing).
 
 `make debug` prerequisite:

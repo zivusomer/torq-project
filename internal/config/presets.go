@@ -10,7 +10,7 @@ var presets = map[string]Config{
 		DatastoreType:     "csv",
 		DatastorePath:     "data/ip_locations.csv",
 		RequestsPerSecond: 2,
-		RateLimitBackend:  "inmemory",
+		RateLimitBackend:  "redis",
 		RedisAddr:         "localhost:6379",
 		RedisDB:           0,
 		RedisKeyPrefix:    "torq:ratelimit",
