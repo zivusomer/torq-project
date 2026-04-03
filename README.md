@@ -123,12 +123,6 @@ Debug flow:
 3. Set breakpoints and call:
    - `curl "http://localhost:8080/v1/find-country?ip=2.22.233.255"`
 
-## Git hooks
-
-Commits in this repo run lint via pre-commit. Tracked hook logic lives in:
-
-- `scripts/hooks/pre-commit`
-
 ## Local example
 
 ```bash
