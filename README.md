@@ -34,7 +34,7 @@ For pre-commit lint execution:
 ### Request flow (`GET /v1/find-country?ip=...`)
 
 1. Route handler validates method (`GET` only).
-2. Rate limiter checks allowed requests per second.
+2. Rate limiter (Token Bucket) checks allowed requests per second.
 3. Handler validates `ip` query parameter and parses it.
 4. Store lookup is executed through `store.Resolver`.
 5. Response mapping:
