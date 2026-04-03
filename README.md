@@ -154,25 +154,19 @@ For local execution, use `make run` (or `make debug`), which runs the app on you
 
 If you want to run everything in the common local flow, use:
 
-1. Build Docker image (optional artifact build):
-
-```bash
-./scripts/build-docker.sh
-```
-
-2. Build Go service binary on host:
+1. Build Go service binary on host:
 
 ```bash
 make build
 ```
 
-3. Run service on host (also ensures local Redis container is ready):
+2. Run or Debug service on host (also ensures local Redis container is ready):
 
 ```bash
-make run
+make run (or make debug)
 ```
 
-4. Call the API:
+3. Call the API:
 
 ```bash
 curl "http://localhost:8080/v1/find-country?ip=2.22.233.255"
