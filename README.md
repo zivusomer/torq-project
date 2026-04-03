@@ -31,19 +31,6 @@ For pre-commit lint execution:
 - Error response format:
   - `{"error":"..."}`
 
-## Code flow
-
-### Startup flow
-
-1. `cmd/torq-project/main.go` calls `config.LoadFromEnv()`.
-2. `internal/config` selects preset by `APP_ENV` and applies env var overrides.
-3. `internal/logging` initializes the global logger service.
-4. `internal/store/factory` selects datastore implementation (currently `csv`).
-5. `internal/store/csvstore` loads CSV rows into an in-memory map.
-6. `internal/ratelimit` initializes the configured limiter backend (`inmemory` or `redis`).
-7. `internal/api/findcountry` creates endpoint handler and `internal/httpserver` registers routes.
-8. `http.ListenAndServe` starts serving on configured `PORT`.
-
 ### Request flow (`GET /v1/find-country?ip=...`)
 
 1. Route handler validates method (`GET` only).
@@ -57,23 +44,6 @@ For pre-commit lint execution:
    - not found -> `404`
    - rate limited -> `429`
    - unexpected internal error -> `500`
-
-### Sequence overview
-
-```text
-Startup:
-main -> config.LoadFromEnv -> presetForEnv/env overrides
-main -> logging.Logger.Info/Warn/Error
-main -> store/factory.New -> csvstore.New(load CSV)
-main -> ratelimit.Init
-main -> findcountry.NewHandler -> httpserver.New -> Handler() -> ListenAndServe
-
-Request:
-client -> /v1/find-country
-handler -> method check -> rate limit check -> ip validation
-handler -> store.FindByIP
-handler -> JSON success/error response
-```
 
 ## Environment variables
 
@@ -95,23 +65,14 @@ Environment variables override values from the selected environment preset.
 
 ```bash
 make build
-make run
-make debug
+make run # executes `ensure-redis` first (below) 
+make debug # executes `ensure-redis` (below), and starts the app under Delve on `localhost:2345`
 make test
-make lint
+make lint # runs format (`go fmt`), dependency cleanup (`go mod tidy`), static checks (`go vet`), and tests
+ensure-redis # Uses local Redis container or creates one with `redis:7-alpine` on `localhost:6379`
 ```
 
-`make lint` runs formatting (`go fmt`), dependency cleanup (`go mod tidy`), static checks (`go vet`), and tests.
-
-`make run` and `make debug` automatically run `ensure-redis` first:
-
-- Ensures a local Redis container named `torq-redis` exists and is running.
-- If missing, it creates one with `redis:7-alpine` on `localhost:6379`.
-- If it exists but is stopped, it starts it.
-
-`make debug` starts the app under Delve on `localhost:2345` (headless, ready for debugger attach and curl testing).
-
-Debug flow:
+## Debug flow:
 
 1. Run `make debug`.
 2. Attach debugger to `localhost:2345` from Cursor/VS Code Go debugger.
