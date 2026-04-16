@@ -33,13 +33,6 @@ func InitRedis(limit int, cfg RedisConfig) error {
 	return initBackend(backend)
 }
 
-func initBackend(backend Backend) error {
-	globalMu.Lock()
-	defer globalMu.Unlock()
-	globalBackend = backend
-	return nil
-}
-
 func AllowForKey(key string) Decision {
 	globalMu.RLock()
 	backend := globalBackend
@@ -48,4 +41,10 @@ func AllowForKey(key string) Decision {
 		return Decision{Allowed: false}
 	}
 	return backend.AllowForKey(key)
+}
+func initBackend(backend Backend) error {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	globalBackend = backend
+	return nil
 }

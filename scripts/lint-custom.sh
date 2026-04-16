@@ -7,7 +7,7 @@ import re
 import sys
 
 root = os.getcwd()
-func_re = re.compile(r'^\s*func\s*(?:\([^)]*\)\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*\(')
+func_re = re.compile(r'^func\s*(?:\([^)]*\)\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*\(')
 
 violations = []
 
